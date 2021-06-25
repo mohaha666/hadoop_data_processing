@@ -4,6 +4,8 @@ import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.io.LongWritable;
 import org.apache.hadoop.io.Text;
+import org.apache.hadoop.io.compress.BZip2Codec;
+import org.apache.hadoop.io.compress.CompressionCodec;
 import org.apache.hadoop.mapreduce.Job;
 import org.apache.hadoop.mapreduce.lib.input.CombineTextInputFormat;
 import org.apache.hadoop.mapreduce.lib.input.FileInputFormat;
@@ -24,6 +26,14 @@ public class WordCountDriver {
     public static void main(String[] args) throws IOException, ClassNotFoundException, InterruptedException {
         // 1 获取job对象
         Configuration conf = new Configuration();
+
+        // 开启map端输出压缩
+        conf.setBoolean("mapreduce.map.output.compress", true);
+        // 设置map端输出压缩方式
+        conf.setClass("mapreduce.map.output.compress.codec", BZip2Codec.class, CompressionCodec.class);
+
+
+
         Job job = Job.getInstance(conf);
 
         // 2 设置jar路径，采用setJarByClass，不使用setJar，把路径写死
@@ -51,6 +61,10 @@ public class WordCountDriver {
         FileOutputFormat.setOutputPath(job, new Path(args[1]));
 
 
+        // 设置reduce端输出压缩开启
+        FileOutputFormat.setCompressOutput(job, true);
+        // 设置reduce端压缩方式
+        FileOutputFormat.setOutputCompressorClass(job, BZip2Codec.class);
 
 
         // 优化项：combiner
